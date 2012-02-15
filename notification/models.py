@@ -304,7 +304,7 @@ def send_now(users, label, extra_context=None, on_site=True, sender=None):
 
         # Strip newlines from subject
         subject = "".join(render_to_string("notification/email_subject.txt", {
-            "message": messages["short.html"],
+            "message": messages["short.txt"],
         }, context).splitlines())
 
         body = render_to_string("notification/email_body.txt", {
