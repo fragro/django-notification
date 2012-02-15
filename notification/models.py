@@ -21,6 +21,8 @@ from django.contrib.auth.models import AnonymousUser
 from django.contrib.contenttypes.models import ContentType
 from django.contrib.contenttypes import generic
 
+from django.core.mail import EmailMultiAlternatives
+
 QUEUE_ALL = getattr(settings, "NOTIFICATION_QUEUE_ALL", False)
 
 
@@ -283,11 +285,11 @@ def send_now(users, label, extra_context=None, on_site=True, sender=None):
             language = get_notification_language(user)
         except LanguageStoreNotAvailable:
             language = None
-        
+
         if language is not None:
             # activate the user's language
             activate(language)
-        
+
         # update context with user specific translations
         context = Context({
             "recipient": user,
@@ -296,24 +298,27 @@ def send_now(users, label, extra_context=None, on_site=True, sender=None):
             "current_site": settings.DOMAIN,
         })
         context.update(extra_context)
-        
+
         # get prerendered format messages
         messages = get_formatted_messages(formats, label, context)
-        
+
         # Strip newlines from subject
         subject = "".join(render_to_string("notification/email_subject.txt", {
-            "message": messages["short.txt"],
+            "message": messages["short.html"],
         }, context).splitlines())
-        
+
         body = render_to_string("notification/email_body.txt", {
-            "message": messages["full.txt"],
+            "message": messages["full.html"],
         }, context)
-        
+
         notice = Notice.objects.create(recipient=user, message=messages["notice.html"],
             notice_type=notice_type, on_site=on_site, sender=sender)
         if should_send(user, notice_type, "1") and user.email and user.is_active: # Email
             recipients.append(user.email)
-        send_mail(subject, body, settings.DEFAULT_FROM_EMAIL, recipients)
+        msg = EmailMultiAlternatives(subject, body, settings.DEFAULT_FROM_EMAIL, recipients)
+        msg.attach_alternative(body, "text/html")
+        msg.send()
+        #send_mail(subject, body, settings.DEFAULT_FROM_EMAIL, recipients)
     
     # reset environment to original language
     activate(current_language)
