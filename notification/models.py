@@ -266,14 +266,6 @@ def send_now(users, label, extra_context=None, on_site=True, sender=None):
     
     notice_type = NoticeType.objects.get(label=label)
     
-    protocol = getattr(settings, "DEFAULT_HTTP_PROTOCOL", "http")
-    
-    notices_url = u"%s://%s%s" % (
-        protocol,
-        unicode(settings.DOMAIN),
-        reverse("notification_notices"),
-    )
-    
     current_language = get_language()
     
     formats = (
@@ -301,7 +293,6 @@ def send_now(users, label, extra_context=None, on_site=True, sender=None):
             "recipient": user,
             "sender": sender,
             "notice": ugettext(notice_type.display),
-            "notices_url": notices_url,
             "current_site": settings.DOMAIN,
         })
         context.update(extra_context)
