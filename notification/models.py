@@ -16,7 +16,6 @@ from django.template.loader import render_to_string
 from django.utils.translation import ugettext_lazy as _
 from django.utils.translation import ugettext, get_language, activate
 
-from django.contrib.sites.models import Site
 from django.contrib.auth.models import User
 from django.contrib.auth.models import AnonymousUser
 from django.contrib.contenttypes.models import ContentType
@@ -268,11 +267,10 @@ def send_now(users, label, extra_context=None, on_site=True, sender=None):
     notice_type = NoticeType.objects.get(label=label)
     
     protocol = getattr(settings, "DEFAULT_HTTP_PROTOCOL", "http")
-    current_site = Site.objects.get_current()
     
     notices_url = u"%s://%s%s" % (
         protocol,
-        unicode(current_site),
+        unicode(settings.DOMAIN),
         reverse("notification_notices"),
     )
     
@@ -304,7 +302,7 @@ def send_now(users, label, extra_context=None, on_site=True, sender=None):
             "sender": sender,
             "notice": ugettext(notice_type.display),
             "notices_url": notices_url,
-            "current_site": current_site,
+            "current_site": settings.DOMAIN,
         })
         context.update(extra_context)
         
